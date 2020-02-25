@@ -1,0 +1,124 @@
+var ExpectedRow = function(rowData, restIsEmpty) {
+  this.RowData = rowData;
+  this.NotMentionedColumnsAreEmpty = restIsEmpty;
+}
+
+class Expected {
+  static emptyRowWith(data) {
+    return new ExpectedRow(data, true);
+  }
+  
+  static anyRowWith(data) {
+    return new ExpectedRow(data, false);
+  }
+}
+
+class cell {
+  static isAnyText() {
+    return "reallyAnythingCouldBeThere";
+  }
+  
+  static hasText() {
+    return "reallyAnythingCouldBeThereButAtLeastSomething";
+  }
+  
+  
+  static isEmpty() {
+    return "shouldBeNullOrEmpty";
+  }
+  
+  static contains(text) {
+    return cell.containsKey() + text;
+  }
+  
+  static endsWith(text) {
+    return cell.endsWithKey() + text;
+  }
+  
+  static startsWith(text) {
+    return cell.startsWithKey() + text;
+  }
+  
+  static containsKey() { return "---contains---:"; }
+  static endsWithKey() { return "---endsWith---:"; }
+  static startsWithKey() { return "---startsWith---:"; } 
+}
+
+function rowMeetsCriteria(rowRange, expectedRowRange, rowIndex) {
+  for(var columnIndex = 0; columnIndex < rowRange[0].length; columnIndex++) {
+    
+    var selectedValue = rowRange[0][columnIndex];
+    
+    Log.info(`Reviewing value: ${selectedValue}, row ${rowIndex}, column ${columnIndex}, with Expected: ${expectedRowRange.RowData.toString()}, in ${rowRange[0].length} columns`);
+    
+    if(columnIndex + 1 > expectedRowRange.RowData.length && !expectedRowRange.NotMentionedColumnsAreEmpty) {
+      Log.info(`>>> Exceeding columns can be anything`);
+      return true;
+    }
+    
+    if(columnIndex + 1 > expectedRowRange.RowData.length && expectedRowRange.NotMentionedColumnsAreEmpty) {
+      Log.info(`>>> Checking if exceeding column value ${selectedValue} is empty`);
+      if(isEmpty(selectedValue)) {
+        continue;
+      } else {
+        return false;
+      }
+    }
+    
+    if(expectedRowRange.RowData[columnIndex] == cell.isAnyText()) {
+      Log.info(`>>> Checking if ${selectedValue} has any value`);
+      continue;
+    }
+    
+    if(expectedRowRange.RowData[columnIndex] == cell.hasText()) {
+      Log.info(`>>> Checking if ${selectedValue} has text`);
+      if(selectedValue.length > 0) {
+        continue;
+      } else {
+        return false;
+      }
+    }
+    
+    if(expectedRowRange.RowData[columnIndex] == cell.isEmpty()) {
+      Log.info(`>>> Checking if ${selectedValue} is empty`);
+      if(isEmpty(selectedValue)) {
+        continue;
+      } else {
+        return false;
+      }
+    }
+    
+    if(expectedRowRange.RowData[columnIndex].startsWith(cell.startsWithKey())) {
+      Log.info(`>>> Checking if ${selectedValue} startsWith ${expectedRowRange.RowData[columnIndex].substring(cell.startsWithKey().length)}`);
+      if(selectedValue.startsWith(expectedRowRange.RowData[columnIndex].substring(cell.startsWithKey().length))) {
+        continue;
+      } else {
+        return false;
+      }      
+    }
+    
+    if(expectedRowRange.RowData[columnIndex].startsWith(cell.endsWithKey())) {
+      Log.info(`>>> Checking if ${selectedValue} endsWith ${expectedRowRange.RowData[columnIndex].substring(cell.endsWithKey().length)}`);
+      if(selectedValue.endsWith(expectedRowRange.RowData[columnIndex].substring(cell.endsWithKey().length))) {
+        continue;
+      } else {
+        return false;
+      }      
+    }
+    
+    if(expectedRowRange.RowData[columnIndex].endsWith(cell.endsWithKey())) {
+      Log.info(`>>> Checking if ${selectedValue} includes ${expectedRowRange.RowData[columnIndex].substring(cell.containsKey().length)}`);
+      if(selectedValue.includes(expectedRowRange.RowData[columnIndex].substring(cell.containsKey().length))) {
+        continue;
+      } else {
+        return false;
+      }      
+    }
+    
+    Log.info(`>>> Comparing values ${selectedValue} to expeted ${expectedRowRange.RowData[columnIndex]}`);
+    if(expectedRowRange.RowData[columnIndex] != selectedValue) {
+      return false;
+    }      
+  }
+  return true;
+}
